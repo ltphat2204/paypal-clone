@@ -1,6 +1,7 @@
 import { Card, Table } from "antd";
+import { HistoryType } from "../interface/History";
 
-const history = [
+const history: HistoryType[] = [
     {
         key: "1",
         subject: "Mike",
@@ -92,7 +93,7 @@ const columns = [
     {
         title: "Amount",
         key: "amount",
-        render: (_: undefined, record) => (
+        render: (_: undefined, record: HistoryType) => (
             <div
                 style={record.type === "Send" ? { color: "red" } : { color: "green" }}
             >

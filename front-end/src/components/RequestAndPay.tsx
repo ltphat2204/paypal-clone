@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { DollarOutlined, SwapOutlined } from "@ant-design/icons";
 import { Modal, Input, InputNumber } from "antd";
+import { Contract } from "ethers";
+import Abi from "../artifacts/abi.json";
+import { WalletContext } from "../contexts/Wallet";
 
 
 function RequestAndPay() {
@@ -9,6 +12,7 @@ function RequestAndPay() {
     const [requestAmount, setRequestAmount] = useState(5);
     const [requestAddress, setRequestAddress] = useState("");
     const [requestMessage, setRequestMessage] = useState("");
+    const wallet = useContext(WalletContext);
 
     const showPayModal = () => {
         setPayModal(true);
@@ -20,7 +24,13 @@ function RequestAndPay() {
     const showRequestModal = () => {
         setRequestModal(true);
     };
-    const hideRequestModal = () => {
+    const hideRequestModal = async () => {
+        const contract = new Contract(
+            "0xadB100eFac5a2C68b73810AFFF8159F33E7E156B",
+            Abi,
+            wallet?.wallet.signer
+        );
+        await contract.createRequest(requestAddress, requestAmount, requestMessage);
         setRequestModal(false);
     };
 

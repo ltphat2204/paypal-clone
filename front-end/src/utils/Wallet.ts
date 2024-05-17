@@ -10,7 +10,7 @@ const connectWallet = async () => {
     const signer = await provider.getSigner();
     const address = await signer.getAddress();
 
-    const wallet: WalletType = { address };
+    const wallet: WalletType = { address, signer };
 
     return wallet;
 }
