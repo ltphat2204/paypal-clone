@@ -1,9 +1,12 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { DollarOutlined, SwapOutlined } from "@ant-design/icons";
 import { Modal, Input, InputNumber } from "antd";
 import { Contract } from "ethers";
 import Abi from "../artifacts/abi.json";
 import { WalletContext } from "../contexts/Wallet";
+import axios from "axios";
+import { RequestsType } from "../interface/Requests";
+import { shortenAdress } from "../utils/Wallet";
 
 
 function RequestAndPay() {
@@ -12,7 +15,13 @@ function RequestAndPay() {
     const [requestAmount, setRequestAmount] = useState(5);
     const [requestAddress, setRequestAddress] = useState("");
     const [requestMessage, setRequestMessage] = useState("");
+    const [requests, setRequests] = useState<RequestsType[]>([]);
     const wallet = useContext(WalletContext);
+    const contract = useMemo(() => new Contract(
+        "0x09D61f31a112274dC4b5ED31cfb8514FcaA072b8",
+        Abi,
+        wallet?.wallet.signer
+    ), [wallet]);
 
     const showPayModal = () => {
         setPayModal(true);
@@ -20,19 +29,36 @@ function RequestAndPay() {
     const hidePayModal = () => {
         setPayModal(false);
     };
+    const processPayment = async () => {
+        await contract.payRequest(0, { value: BigInt(requests[0].amount) / BigInt(1e6) });
+        hidePayModal();
+    }
 
     const showRequestModal = () => {
         setRequestModal(true);
     };
     const hideRequestModal = async () => {
-        const contract = new Contract(
-            "0xadB100eFac5a2C68b73810AFFF8159F33E7E156B",
-            Abi,
-            wallet?.wallet.signer
-        );
-        await contract.createRequest(requestAddress, requestAmount, requestMessage);
         setRequestModal(false);
     };
+    const processRequest = async () => {
+        await contract.createRequest(requestAddress, requestAmount, requestMessage);
+        hideRequestModal();
+    }
+
+    useEffect(() => {
+        const getRequests = async () => {
+            const res = await axios.get("http://localhost:8080/payment-request", {
+                params: {
+                    userAddress: wallet?.wallet.address
+                }
+            });
+            setRequests(res.data.requests);
+        }
+
+        if (wallet && wallet.wallet.address) {
+            getRequests();
+        }
+    }, [wallet])
 
     return (
         <>
@@ -40,18 +66,26 @@ function RequestAndPay() {
                 title="Confirm Payment"
                 open={payModal}
                 onOk={() => {
-                    hidePayModal();
+                    processPayment();
                 }}
                 onCancel={hidePayModal}
                 okText="Proceed To Pay"
                 cancelText="Cancel"
             >
+                {requests.length &&
+                <>
+                    <h2>Sending payment to {requests[0].name}</h2>
+                    <p>Wallet address: {shortenAdress(requests[0].from)}</p>
+                    <h3>Amount: {requests[0].amount} Matic</h3>
+                    <p>Message: {requests[0].message}</p>
+                </>
+                }
             </Modal>
             <Modal
                 title="Request A Payment"
                 open={requestModal}
                 onOk={() => {
-                    hideRequestModal();
+                    processRequest();
                 }}
                 onCancel={hideRequestModal}
                 okText="Proceed To Request"
@@ -73,7 +107,7 @@ function RequestAndPay() {
                 >
                     <DollarOutlined style={{ fontSize: "26px" }} />
                     Pay
-                    <div className="numReqs">2</div>
+                    <div className="numReqs">{requests.length}</div>
                 </div>
                 <div
                     className="quickOption"

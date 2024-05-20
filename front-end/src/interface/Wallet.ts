@@ -2,7 +2,7 @@ import { JsonRpcSigner } from "ethers";
 
 interface WalletType {
     address: string;
-    signer: JsonRpcSigner;
+    signer?: JsonRpcSigner;
 }
 
 interface WalletContextType {

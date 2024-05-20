@@ -1,4 +1,4 @@
-import { ethers, formatEther } from "ethers";
+import { ethers } from "ethers";
 import { WalletType } from "../interface/Wallet";
 
 const connectWallet = async () => {
@@ -22,7 +22,7 @@ const shortenAdress = (address: string) => {
 }
 
 const toEth = (num: bigint) => {
-    return formatEther(num);
+    return (num * BigInt(1e6));
 }
 
 export { connectWallet, shortenAdress, toEth };

@@ -25,9 +25,10 @@ function App() {
                 const address = await connectWallet();
                 user.connect(address);
 
-                window.ethereum.on("accountsChanged", function (accounts: string[]) {
+                window.ethereum.on("accountsChanged", async function (accounts: string[]) {
                     if (accounts.length > 0) {
-                        user.connect({ address: accounts[0] });
+                        const wallet = await connectWallet();
+                        user.connect(wallet);
                     } else {
                         user.disconnect();
                     }
